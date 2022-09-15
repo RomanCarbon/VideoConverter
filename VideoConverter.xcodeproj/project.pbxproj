@@ -8,7 +8,6 @@
 
 /* Begin PBXBuildFile section */
 		96CD8AC928A4E69A00FAA1CC /* VideoHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96CD8AC828A4E69A00FAA1CC /* VideoHelper.swift */; };
-		96CE775E28AFD0DD00CB551D /* FYVideoCompressor in Frameworks */ = {isa = PBXBuildFile; productRef = 96CE775D28AFD0DD00CB551D /* FYVideoCompressor */; };
 		96E67C662899564B00EBF4C0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E67C652899564B00EBF4C0 /* AppDelegate.swift */; };
 		96E67C682899564B00EBF4C0 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E67C672899564B00EBF4C0 /* SceneDelegate.swift */; };
 		96E67C6A2899564B00EBF4C0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96E67C692899564B00EBF4C0 /* ViewController.swift */; };
@@ -36,7 +35,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				96CE775E28AFD0DD00CB551D /* FYVideoCompressor in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,7 +90,6 @@
 			);
 			name = VideoConverter;
 			packageProductDependencies = (
-				96CE775D28AFD0DD00CB551D /* FYVideoCompressor */,
 			);
 			productName = VideoConverter;
 			productReference = 96E67C622899564B00EBF4C0 /* VideoConverter.app */;
@@ -123,7 +120,6 @@
 			);
 			mainGroup = 96E67C592899564B00EBF4C0;
 			packageReferences = (
-				96CE775C28AFD0DD00CB551D /* XCRemoteSwiftPackageReference "FYVideoCompressor" */,
 			);
 			productRefGroup = 96E67C632899564B00EBF4C0 /* Products */;
 			projectDirPath = "";
@@ -374,25 +370,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		96CE775C28AFD0DD00CB551D /* XCRemoteSwiftPackageReference "FYVideoCompressor" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/T2Je/FYVideoCompressor.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.0.8;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		96CE775D28AFD0DD00CB551D /* FYVideoCompressor */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 96CE775C28AFD0DD00CB551D /* XCRemoteSwiftPackageReference "FYVideoCompressor" */;
-			productName = FYVideoCompressor;
-		};
-/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		96E67C6E2899564B00EBF4C0 /* VideoConverter.xcdatamodeld */ = {

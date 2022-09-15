@@ -15,14 +15,10 @@ let videoSize = CGSize(width: 720, height: 1280)
 class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavigationControllerDelegate {
 
     @IBOutlet weak var button: UIButton!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var imagePickerController = UIImagePickerController()
 
     var firstVideoURL: String?
-
-    var originVideoURL: URL? {
-        let url = createLocalUrl(for: "IMG_1033", ofType: "mov")
-        return url
-    }
 
     var secondVideoURL: URL? {
         let url = createLocalUrl(for: "Untitled", ofType: "mp4")
@@ -38,12 +34,11 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     var assetWriter: AVAssetWriter?
     var assetWriterVideoInput: AVAssetWriterInput?
     var assetReader: AVAssetReader?
-    let bitrate: NSNumber = NSNumber(value: 1250000) // *** you can change this number to increase/decrease the quality. The more you increase, the better the video quality but the the compressed file size will also increase
+    let bitrate: NSNumber = NSNumber(value: 1250000)
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("Start \(Date())")
-        mergeVideo(firstVideoURL: originVideoURL, audioURL: audioURL)
+        activityIndicator.hidesWhenStopped = true
     }
 
     @IBAction func getVideo(_ sender: Any) {
@@ -57,8 +52,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         let videoURL = info[UIImagePickerController.InfoKey.mediaURL] as? NSURL
         firstVideoURL = videoURL?.absoluteString
         print("Start \(Date())")
-//        mergeVideo(firstVideoURL: firstVideoURL, audioURL: audioURL)
+        mergeVideo(firstVideoURL: firstVideoURL, audioURL: audioURL)
         dismiss(animated: true, completion: nil)
+        activityIndicator.startAnimating()
     }
 
     func createLocalUrl(for filename: String, ofType: String) -> URL? {
@@ -75,10 +71,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         return url
     }
 
-//    func mergeVideo(firstVideoURL: String?, audioURL: URL?) {
-//        guard let firstVideoURL = URL(string: firstVideoURL ?? ""), let secondVideoURL = secondVideoURL, let audioURL = audioURL else { return }
-    func mergeVideo(firstVideoURL: URL?, audioURL: URL?) {
-        guard let firstVideoURL = firstVideoURL, let secondVideoURL = secondVideoURL, let audioURL = audioURL else { return }
+    func mergeVideo(firstVideoURL: String?, audioURL: URL?) {
+        guard let firstVideoURL = URL(string: firstVideoURL ?? ""), let secondVideoURL = secondVideoURL, let audioURL = audioURL else { return }
+
         let firstAsset = AVAsset(url: firstVideoURL)
         let secondAsset = AVAsset(url: secondVideoURL)
         let audioAsset = AVAsset(url: audioURL)
@@ -91,8 +86,9 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         var instructions: [AVVideoCompositionLayerInstruction] = []
         let firstTrack = mixComposition.addMutableTrack(withMediaType: .video,
                                                         preferredTrackID: Int32(kCMPersistentTrackID_Invalid))
-        let secondTrack = !isSecondVideoNeeded ? nil : mixComposition.addMutableTrack(withMediaType: .video,
-                                                                                                        preferredTrackID: Int32(kCMPersistentTrackID_Invalid))
+        let secondTrack = !isSecondVideoNeeded ? nil : mixComposition.addMutableTrack(
+            withMediaType: .video,
+            preferredTrackID: Int32(kCMPersistentTrackID_Invalid))
 
         guard let firstTrack = firstTrack else { return }
 
@@ -102,7 +98,7 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
                 CMTimeRangeMake(start: .zero, duration: duration),
                 of: firstAsset.tracks(withMediaType: .video)[0],
                 at: .zero)
-//            let firstInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: firstTrack)
+
             let firstInstruction = VideoHelper.videoCompositionInstruction(firstTrack, asset: firstAsset)
             firstInstruction.setOpacity(0.0, at: duration)
             instructions.append(firstInstruction)
@@ -136,8 +132,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         mainComposition.instructions = [mainInstruction]
         mainComposition.frameDuration = CMTimeMake(value: 1, timescale: 25)
         mainComposition.renderSize = videoSize
-//        mainComposition.renderSize = CGSize(width: firstTrack.naturalSize.width,
-//                                            height: firstTrack.naturalSize.height)
 
         let audioTrack = mixComposition.addMutableTrack(
             withMediaType: .audio,
@@ -152,18 +146,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
         } catch {
             print("Failed to load Audio track")
         }
-
-//        guard
-//            let documentDirectory = FileManager.default.urls(
-//                for: .documentDirectory,
-//                in: .userDomainMask).first
-//        else { return }
-//
-//        let dateFormatter = DateFormatter()
-//        dateFormatter.dateStyle = .long
-//        dateFormatter.timeStyle = .short
-//        let date = dateFormatter.string(from: Date())
-//        let url = documentDirectory.appendingPathComponent("mergeVideo-\(date).mov")
 
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
@@ -185,14 +167,18 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
             switch exporter.status {
             case .completed:
                 guard let exporterOutputURL = exporter.outputURL else { return}
-                DispatchQueue.main.async { [weak self] in
-                    self?.compressFile(exporterOutputURL) { (compressedURL) in
-                        // remove activity indicator
-                        // do something with the compressedURL such as sending to Firebase or playing it in a player on the *main queue*
-                        print("Exelent! \(Date())")
+                self?.compressFile(exporterOutputURL) { (compressedURL) in
+                    // remove activity indicator
+                    // do something with the compressedURL such as sending to Firebase or playing it in a player on the *main queue*
+                    DispatchQueue.main.async {
+                        self?.activityIndicator.stopAnimating()
+                        let alert = UIAlertController(title: "Video converted!", message: nil, preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: nil))
+                        self?.present(alert, animated: true)
                     }
-                    self?.removeUrlFromFileManager(exporterOutputURL)
+                    print("Exelent! \(Date())")
                 }
+                    self?.removeUrlFromFileManager(exporterOutputURL)
             case .failed:
                 print(exporter.error as Any)
             default:
@@ -217,9 +203,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
     }
 
     // MARK: - Compressor
-
-
-    // compression function, it returns a .mp4 but you can change it to .mov inside the do try block towards the middle. Change assetWriter = try AVAssetWriter ... AVFileType.mp4 to AVFileType.mov
     func compressFile(_ urlToCompress: URL, completion:@escaping (URL)->Void) {
 
         var audioFinished = false
@@ -309,13 +292,6 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate & UINavi
             dateFormatter.timeStyle = .short
             let date = dateFormatter.string(from: Date())
             let outputURL = documentDirectory.appendingPathComponent("mergeVideo-\(date).mov")
-
-//            let formatter = DateFormatter()
-//            formatter.dateFormat = "yyyy'-'MM'-'dd'T'HH':'mm':'ss'Z'"
-//            let date = Date()
-//            let tempDir = NSTemporaryDirectory()
-//            let outputPath = "\(tempDir)/\(formatter.string(from: date)).mp4"
-//            let outputURL = URL(fileURLWithPath: outputPath)
 
             assetWriter = try AVAssetWriter(outputURL: outputURL, fileType: AVFileType.mov)
 
